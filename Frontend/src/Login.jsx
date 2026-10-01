@@ -1,6 +1,8 @@
 import React, { useState } from "react"
 import axios from "axios"
 
+const API_URL = import.meta.env.VITE_API_URL
+
 const Login = () => {
 
     const [email, setEmail] = useState("")
@@ -13,22 +15,22 @@ const Login = () => {
         try {
 
             const res = await axios.post(
-                "http://localhost:3000/login",
+                `${API_URL}/login`,
                 {
                     email,
                     password
                 }
             )
 
-           alert(res.data.message)
+            alert(res.data.message)
 
-localStorage.setItem(
-    "user",
-    JSON.stringify(res.data.user)
-)
+            localStorage.setItem(
+                "user",
+                JSON.stringify(res.data.user)
+            )
 
-setEmail("")
-setPassword("")
+            setEmail("")
+            setPassword("")
 
         } catch (err) {
 

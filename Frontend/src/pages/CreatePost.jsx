@@ -19,7 +19,7 @@ formData.append(
     "username",
     user.username
 )
-    axios.post('http://localhost:3000/create-post', formData)
+    axios.post(`${import.meta.env.VITE_API_URL}`, formData)
       .then((res) => {
       navigate("/feed")
 

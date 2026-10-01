@@ -1,17 +1,25 @@
 import React, { useState, useEffect } from "react"
 import axios from "axios"
 
+const API_URL = import.meta.env.VITE_API_URL
+
 const Profile = () => {
 
     const user = JSON.parse(localStorage.getItem("user"))
 
     const [posts, setPosts] = useState([])
+
     const [profileImage, setProfileImage] = useState(
-    user.profileImage || ""
-)
+        user.profileImage || ""
+    )
 
     const [editingProfile, setEditingProfile] = useState(false)
-    const [newUsername, setNewUsername] = useState(user.username)
+
+    const [newUsername, setNewUsername] = useState(
+        user.username
+    )
+
+    // ================= GET POSTS =================
 
     useEffect(() => {
 
@@ -20,7 +28,7 @@ const Profile = () => {
             try {
 
                 const res = await axios.get(
-                    "http://localhost:3000/posts"
+                    `${API_URL}/posts`
                 )
 
                 setPosts(res.data.posts)
@@ -37,88 +45,110 @@ const Profile = () => {
 
     }, [])
 
+    // ================= MY POSTS =================
+
     const myPosts = posts.filter(
         (post) => post.username === user.username
     )
 
-const handleUpdateProfile = async () => {
+    // ================= UPDATE PROFILE =================
 
-    try {
+    const handleUpdateProfile = async () => {
 
-        const res = await axios.put(
-            "http://localhost:3000/profile",
-            {
-                oldUsername: user.username,
-                newUsername: newUsername
-            }
-        )
+        try {
 
-        // Update localStorage
-        localStorage.setItem(
-            "user",
-            JSON.stringify(res.data.user)
-        )
+            const res = await axios.put(
+                `${API_URL}/profile`,
+                {
+                    oldUsername: user.username,
+                    newUsername: newUsername
+                }
+            )
 
-        setEditingProfile(false)
+            // Update localStorage
 
-        alert("Profile updated successfully")
+            localStorage.setItem(
+                "user",
+                JSON.stringify(res.data.user)
+            )
 
-        // Refresh page
-        window.location.reload()
+            setEditingProfile(false)
 
-    } catch (err) {
+            alert("Profile updated successfully")
 
-        console.error(err)
+            // Refresh page
 
-        alert(
-            err.response?.data?.message ||
-            "Failed to update profile"
-        )
+            window.location.reload()
+
+        } catch (err) {
+
+            console.error(err)
+
+            alert(
+                err.response?.data?.message ||
+                "Failed to update profile"
+            )
+
+        }
+
     }
-}
 
+    // ================= PROFILE IMAGE =================
 
+    const handleProfileImage = async (e) => {
 
-const handleProfileImage = async (e) => {
+        const file = e.target.files[0]
 
-    const file = e.target.files[0]
+        if (!file) return
 
-    if (!file) return
+        try {
 
-    try {
+            const formData = new FormData()
 
-        const formData = new FormData()
+            formData.append(
+                "profileImage",
+                file
+            )
 
-        formData.append("profileImage", file)
-        formData.append("username", user.username)
+            formData.append(
+                "username",
+                user.username
+            )
 
-        const res = await axios.put(
-            "http://localhost:3000/profile/image",
-            formData
-        )
+            const res = await axios.put(
+                `${API_URL}/profile/image`,
+                formData
+            )
 
-        // Update localStorage
-        localStorage.setItem(
-            "user",
-            JSON.stringify(res.data.user)
-        )
+            // Update localStorage
 
-        setProfileImage(res.data.user.profileImage)
+            localStorage.setItem(
+                "user",
+                JSON.stringify(res.data.user)
+            )
 
-        alert("Profile picture updated successfully")
+            setProfileImage(
+                res.data.user.profileImage
+            )
 
-    } catch (err) {
+            alert(
+                "Profile picture updated successfully"
+            )
 
-        console.error(err)
+        } catch (err) {
 
-        alert(
-            err.response?.data?.message ||
-            "Failed to upload profile picture"
-        )
+            console.error(err)
+
+            alert(
+                err.response?.data?.message ||
+                "Failed to upload profile picture"
+            )
+
+        }
+
     }
-}
 
-
+    // ================= UI =================
 
     return (
 
@@ -126,154 +156,174 @@ const handleProfileImage = async (e) => {
 
             <h1>My Profile</h1>
 
-
             {/* PROFILE PICTURE */}
-      <div>
 
-    {profileImage && (
-        <img
-            src={profileImage}
-            alt="Profile"
-            style={{
-                width: "120px",
-                height: "120px",
-                borderRadius: "50%",
-                objectFit: "cover"
-            }}
-        />
-    )}
+            <div>
 
-    <br />
-
-    <label
-        style={{
-            display: "inline-block",
-            marginTop: "10px",
-            padding: "8px 14px",
-            backgroundColor: "#eee",
-            borderRadius: "6px",
-            cursor: "pointer"
-        }}
-    >
-        Edit Profile Image
-
-        <input
-            type="file"
-            accept="image/*"
-            onChange={handleProfileImage}
-            style={{ display: "none" }}
-        />
-    </label>
-
-</div>
-
-
-{/* USERNAME / EDIT PROFILE */}
-            {
-    editingProfile ? (
-
-        <div>
-
-            <input
-                type="text"
-                value={newUsername}
-                onChange={(e) =>
-                    setNewUsername(e.target.value)
-                }
-            />
-
-            <button
-                onClick={handleUpdateProfile}
-            >
-                Save
-            </button>
-
-            <button
-                onClick={() => {
-                    setEditingProfile(false)
-                    setNewUsername(user.username)
-                }}
-            >
-                Cancel
-            </button>
-
-        </div>
-
-    ) : (
-
-        <div>
-
-            <h2>{user.username}</h2>
-
-            <button
-                onClick={() =>
-                    setEditingProfile(true)
-                }
-            >
-                Edit Profile Name
-            </button>
-
-        </div>
-
-    )
-}
-
-<p>
-    Posts: {myPosts.length}
-</p>
-
-          
-
-           
-  {/* MY POSTS */}
-
-<div
-    style={{
-        display: "grid",
-        gridTemplateColumns: "repeat(3, 1fr)",
-        gap: "15px",
-        marginTop: "20px"
-    }}
->
-
-    {
-        myPosts.length > 0 ? (
-
-            myPosts.map((post) => (
-
-                <div key={post._id}>
+                {profileImage && (
 
                     <img
-                        src={post.image}
-                        alt={post.caption}
+                        src={profileImage}
+                        alt="Profile"
                         style={{
-                            width: "100%",
-                            height: "200px",
+                            width: "120px",
+                            height: "120px",
+                            borderRadius: "50%",
                             objectFit: "cover"
                         }}
                     />
 
-                    <p>
-                        {post.caption}
-                    </p>
+                )}
 
-                </div>
+                <br />
 
-            ))
+                <label
+                    style={{
+                        display: "inline-block",
+                        marginTop: "10px",
+                        padding: "8px 14px",
+                        backgroundColor: "#eee",
+                        borderRadius: "6px",
+                        cursor: "pointer"
+                    }}
+                >
 
-        ) : (
+                    Edit Profile Image
+
+                    <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleProfileImage}
+                        style={{
+                            display: "none"
+                        }}
+                    />
+
+                </label>
+
+            </div>
+
+
+            {/* USERNAME / EDIT PROFILE */}
+
+            {
+                editingProfile ? (
+
+                    <div>
+
+                        <input
+                            type="text"
+                            value={newUsername}
+                            onChange={(e) =>
+                                setNewUsername(
+                                    e.target.value
+                                )
+                            }
+                        />
+
+                        <button
+                            onClick={handleUpdateProfile}
+                        >
+                            Save
+                        </button>
+
+                        <button
+                            onClick={() => {
+
+                                setEditingProfile(false)
+
+                                setNewUsername(
+                                    user.username
+                                )
+
+                            }}
+                        >
+                            Cancel
+                        </button>
+
+                    </div>
+
+                ) : (
+
+                    <div>
+
+                        <h2>
+                            {user.username}
+                        </h2>
+
+                        <button
+                            onClick={() =>
+                                setEditingProfile(true)
+                            }
+                        >
+                            Edit Profile Name
+                        </button>
+
+                    </div>
+
+                )
+            }
+
+
+            {/* POST COUNT */}
 
             <p>
-                You have not posted anything yet.
+                Posts: {myPosts.length}
             </p>
 
-        )
-    }
 
-</div>
+            {/* MY POSTS */}
+
+            <div
+                style={{
+                    display: "grid",
+                    gridTemplateColumns:
+                        "repeat(3, 1fr)",
+                    gap: "15px",
+                    marginTop: "20px"
+                }}
+            >
+
+                {
+                    myPosts.length > 0 ? (
+
+                        myPosts.map((post) => (
+
+                            <div key={post._id}>
+
+                                <img
+                                    src={post.image}
+                                    alt={post.caption}
+                                    style={{
+                                        width: "100%",
+                                        height: "200px",
+                                        objectFit: "cover"
+                                    }}
+                                />
+
+                                <p>
+                                    {post.caption}
+                                </p>
+
+                            </div>
+
+                        ))
+
+                    ) : (
+
+                        <p>
+                            You have not posted anything yet.
+                        </p>
+
+                    )
+                }
+
+            </div>
 
         </section>
+
     )
+
 }
 
 export default Profile

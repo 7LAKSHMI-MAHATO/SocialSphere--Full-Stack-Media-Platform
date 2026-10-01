@@ -1,6 +1,8 @@
 import React, { useState } from "react"
 import axios from "axios"
 
+const API_URL = import.meta.env.VITE_API_URL
+
 const Search = () => {
 
     const [query, setQuery] = useState("")
@@ -18,7 +20,7 @@ const Search = () => {
         try {
 
             const res = await axios.get(
-                `http://localhost:3000/search?query=${query}`
+                `${API_URL}/search?query=${query}`
             )
 
             setUsers(res.data.users)
@@ -46,7 +48,6 @@ const Search = () => {
             <button onClick={handleSearch}>
                 Search
             </button>
-
 
             {/* USERS */}
 
@@ -77,7 +78,6 @@ const Search = () => {
                 ))
             )}
 
-
             {/* POSTS */}
 
             <h3>Posts</h3>
@@ -100,7 +100,9 @@ const Search = () => {
                             <b>{post.username}</b>
                         </p>
 
-                        <p>{post.caption}</p>
+                        <p>
+                            {post.caption}
+                        </p>
 
                     </div>
                 ))
